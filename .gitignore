@@ -5,7 +5,10 @@
 *.iml
 
 ### Gradle ###
-.gradle
+.gradle/
 build/
+
+### Java ###
+*.jar
 
 ### Project Specific ###
