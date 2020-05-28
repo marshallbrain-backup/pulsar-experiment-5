@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform") version "1.3.72"
 }
 
-group = "com.marshalldbrain.pulsar"
+group = "com.marshalldbrain"
 version = "0.1"
 
 repositories {
@@ -17,6 +17,7 @@ kotlin {
 
         val commonMain by getting {
             dependencies {
+                implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
                 implementation(kotlin("stdlib-common"))
             }
         }
@@ -38,4 +39,5 @@ kotlin {
         }
 
     }
+
 }
