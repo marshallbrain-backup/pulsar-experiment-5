@@ -47,3 +47,5 @@ kotlin {
     }
 
 }
+
+apply("dependencies.gradle.kts")
