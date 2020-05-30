@@ -32,10 +32,16 @@ kotlin {
 
         jvm().compilations["test"].defaultSourceSet {
             dependencies {
-                implementation("io.kotlintest:kotlintest-runner-junit5:3.3.0")
+                implementation("io.kotest:kotest-runner-junit5-jvm:4.0.5") // for kotest framework
+                implementation("io.kotest:kotest-assertions-core-jvm:4.0.5") // for kotest core jvm assertions
+                implementation("io.kotest:kotest-property-jvm:4.0.5") // for kotest property test
                 implementation("org.assertj:assertj-core:3.11.1")
                 implementation("io.mockk:mockk:1.9.3")
             }
+        }
+
+        tasks.withType<Test> {
+            useJUnitPlatform()
         }
 
     }
