@@ -11,4 +11,7 @@ build/
 ### Java ###
 *.jar
 
+### Kotest ###
+.kotlintest/
+
 ### Project Specific ###
