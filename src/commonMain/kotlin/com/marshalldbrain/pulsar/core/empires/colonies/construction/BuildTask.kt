@@ -33,6 +33,19 @@ internal class BuildTaskImpl(
             return amountLeft == 0
         }
 
+    fun build(buildAmount: Int): Int {
+        timeLeft -= buildAmount
+        while (timeLeft <= 0 && !isDone) {
+            onComplete.invoke()
+            amountLeft--
+            if (!isDone) {
+                timeLeft += timeUnit
+            }
+        }
+        //TODO change to number.flipSign
+        return timeLeft * -1
+    }
+
 }
 
 
