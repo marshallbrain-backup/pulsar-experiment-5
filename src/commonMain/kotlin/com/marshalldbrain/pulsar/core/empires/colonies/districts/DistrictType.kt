@@ -3,7 +3,7 @@ package com.marshalldbrain.pulsar.core.empires.colonies.districts
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.Buildable
 import com.marshalldbrain.pulsar.core.resources.ResourceType
 
-data class DistrictType (
+class DistrictType (
     val id: String,
     val buildTime: Int,
     val cost: Map<ResourceType, Int>,
