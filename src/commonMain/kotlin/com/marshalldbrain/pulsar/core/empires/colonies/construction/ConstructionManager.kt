@@ -13,10 +13,10 @@ class ConstructionManager {
         get() = queue.toList()
 
     internal fun add(task: BuildTaskImpl) {
-        if (tasks.isEmpty()) {
-            tasks.add(task)
-        } else {
-            queue.push(task)
+        when {
+            task.timeUnit == 0 -> task.build(0)
+            tasks.isEmpty() -> tasks.add(task)
+            else -> queue.push(task)
         }
     }
 
