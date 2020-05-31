@@ -1,15 +1,16 @@
 package com.marshalldbrain.pulsar.core.empires.colonies
 
-import com.marshalldbrain.ion.collections.queueOf
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.*
 import com.marshalldbrain.pulsar.core.empires.colonies.districts.DistrictOverseer
 import com.marshalldbrain.pulsar.core.empires.colonies.districts.DistrictType
 
-class Colony {
+class Colony(districts: Set<DistrictType>) {
 
     private val constructionManager = ConstructionManager()
-    private val districtOverseer = DistrictOverseer(emptySet())
+    private val districtOverseer = DistrictOverseer(districts)
 
+    val districts: Map<DistrictType, Int>
+        get() = districtOverseer.districts
     val currentTasks: List<BuildTask>
         get() = constructionManager.currentTasks
     val buildQueue: List<BuildTask>
@@ -42,6 +43,10 @@ class Colony {
 
         }
 
+    }
+
+    fun tick(timePassed: Int) {
+        constructionManager.processTime(timePassed)
     }
 
 }
