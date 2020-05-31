@@ -16,6 +16,8 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
         get() = allocation.values.sum()
     val allocatedSlots: Int
         get() = allocation.size
+    val districts: Map<DistrictType, Int>
+        get() = allocation
 
     init {
 
