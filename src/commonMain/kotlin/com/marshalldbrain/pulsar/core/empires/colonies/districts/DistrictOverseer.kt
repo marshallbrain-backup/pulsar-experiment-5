@@ -3,12 +3,15 @@ package com.marshalldbrain.pulsar.core.empires.colonies.districts
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildTask
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildTaskImpl
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildType
+import com.marshalldbrain.pulsar.core.resources.ResourcePath
+import com.marshalldbrain.pulsar.core.resources.ResourceType
 
 class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
 
     private val max = 25
     private val maxSlots = 4
     private val allocation = mutableMapOf<DistrictType, Int>()
+    private val resourceDelta = mutableMapOf<ResourcePath, Int>()
     private val notImplementedMessage = "has not been implemented as possible construction types for " +
             "districts but plans to be implemented in the future."
 
@@ -18,6 +21,12 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
         get() = allocation.size
     val districts: Map<DistrictType, Int>
         get() = allocation
+    val delta: Map<ResourcePath, Int>
+        get() {
+            val delta = resourceDelta.toMap()
+            resourceDelta.clear()
+            return delta
+        }
 
     init {
 
@@ -56,6 +65,7 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
             BuildType.BUILD -> {
                 BuildTaskImpl(target, type, target.buildTime, target.cost, amount) {
                     allocation[target] = allocation.getValue(target) + 1
+                    incrementResources(target)
                 }
             }
             BuildType.DESTROY, BuildType.RETOOL, BuildType.UPGRADE -> {
@@ -65,6 +75,17 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                     "This should also never be seen and is a bug if it is")
         }
 
+    }
+
+    private fun incrementResources(target: DistrictType) {
+        target.production.forEach {
+            val path = ResourcePath(it.key, target.id)
+            resourceDelta[path] = resourceDelta.getOrPut(path) {0} + it.value
+        }
+        target.upkeep.forEach {
+            val path = ResourcePath(it.key, target.id)
+            resourceDelta[path] = resourceDelta.getOrPut(path) {0} - it.value
+        }
     }
 
 }
