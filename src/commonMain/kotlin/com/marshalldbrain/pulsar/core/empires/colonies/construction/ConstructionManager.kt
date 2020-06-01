@@ -3,6 +3,8 @@ package com.marshalldbrain.pulsar.core.empires.colonies.construction
 import com.marshalldbrain.ion.ImpossibleStateException
 import com.marshalldbrain.ion.collections.queueOf
 import com.marshalldbrain.pulsar.core.resources.ResourceHelper
+import com.marshalldbrain.pulsar.core.resources.ResourceType
+import kotlin.reflect.KFunction3
 
 internal class ConstructionManager {
 
@@ -13,9 +15,11 @@ internal class ConstructionManager {
     val buildQueue: List<BuildTask>
         get() = queue.toList()
 
-    fun add(task: BuildTaskImpl) {
+    fun add(
+        task: BuildTaskImpl
+    ) {
         when {
-            task.timeUnit == 0 -> task.build(0)
+            task.timeLeft == 0 -> task.build(0)
             tasks.isEmpty() -> tasks.add(task)
             else -> queue.push(task)
         }

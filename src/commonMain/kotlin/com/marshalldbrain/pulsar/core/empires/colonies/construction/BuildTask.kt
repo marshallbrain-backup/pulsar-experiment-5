@@ -10,6 +10,7 @@ interface BuildTask {
     val costUnit: Map<ResourceType, Int>
     val amount: Int
     val amountLeft: Int
+    val timeUnitLeft: Int
     val timeLeft: Int
     val isDone: Boolean
 
@@ -24,10 +25,12 @@ internal class BuildTaskImpl(
     private val onComplete: () -> Unit
 ) : BuildTask {
 
-    override var timeLeft: Int = timeUnit
+    override var timeUnitLeft: Int = timeUnit
         private set
     override var amountLeft: Int = amount
         private set
+
+    override val timeLeft: Int = (amountLeft - 1) * timeUnit + timeUnitLeft
 
     override val isDone: Boolean
         get() {
@@ -35,16 +38,16 @@ internal class BuildTaskImpl(
         }
 
     fun build(buildAmount: Int): Int {
-        timeLeft -= buildAmount
-        while (timeLeft <= 0 && !isDone) {
+        timeUnitLeft -= buildAmount
+        while (timeUnitLeft <= 0 && !isDone) {
             onComplete.invoke()
             amountLeft--
             if (!isDone) {
-                timeLeft += timeUnit
+                timeUnitLeft += timeUnit
             }
         }
         //TODO change to number.flipSign
-        return timeLeft * -1
+        return timeUnitLeft * -1
     }
 
 }
