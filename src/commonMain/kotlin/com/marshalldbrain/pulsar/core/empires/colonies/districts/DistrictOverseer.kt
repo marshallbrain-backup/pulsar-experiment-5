@@ -1,6 +1,5 @@
 package com.marshalldbrain.pulsar.core.empires.colonies.districts
 
-import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildTask
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildTaskImpl
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildType
 import com.marshalldbrain.pulsar.core.resources.ResourcePath
@@ -65,7 +64,8 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
             BuildType.BUILD -> {
                 BuildTaskImpl(target, type, target.buildTime, target.cost, amount) {
                     allocation[target] = allocation.getValue(target) + 1
-                    incrementResources(target)
+                    updateResources(target.id, target.production)
+                    updateResources(target.id, target.upkeep, true)
                 }
             }
             BuildType.DESTROY, BuildType.RETOOL, BuildType.UPGRADE -> {
@@ -77,14 +77,14 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
 
     }
 
-    private fun incrementResources(target: DistrictType) {
-        target.production.forEach {
-            val path = ResourcePath(it.key, target.id)
-            resourceDelta[path] = resourceDelta.getOrPut(path) {0} + it.value
-        }
-        target.upkeep.forEach {
-            val path = ResourcePath(it.key, target.id)
-            resourceDelta[path] = resourceDelta.getOrPut(path) {0} - it.value
+    private fun updateResources(
+        id: String,
+        resources: Map<ResourceType, Int>,
+        remove: Boolean = false
+    ) {
+        resources.forEach {
+            val path = ResourcePath(it.key, id)
+            resourceDelta[path] = resourceDelta.getOrPut(path) {0} + it.value * if (remove) -1 else 1
         }
     }
 
