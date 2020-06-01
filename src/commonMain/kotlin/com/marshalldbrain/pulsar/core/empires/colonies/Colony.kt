@@ -5,6 +5,7 @@ import com.marshalldbrain.pulsar.core.empires.colonies.districts.DistrictOversee
 import com.marshalldbrain.pulsar.core.empires.colonies.districts.DistrictType
 import com.marshalldbrain.pulsar.core.resources.ResourceHelper
 import com.marshalldbrain.pulsar.core.resources.ResourcePath
+import com.marshalldbrain.pulsar.core.resources.ResourceType
 
 //TODO add resource collection and possessing
 //TODO add removal of tasks from construction with refund of non built units
@@ -48,7 +49,7 @@ class Colony(districts: Set<DistrictType>) {
                         "This should also never be seen and is a bug if it is")
             }
 
-            constructionManager.add(task, resourceHelper)
+            constructionManager.add(task)
 
         }
 
