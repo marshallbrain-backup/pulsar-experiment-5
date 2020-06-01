@@ -12,6 +12,7 @@ interface BuildTask {
     val amountLeft: Int
     val timeLeft: Int
     val isDone: Boolean
+
 }
 
 internal class BuildTaskImpl(
