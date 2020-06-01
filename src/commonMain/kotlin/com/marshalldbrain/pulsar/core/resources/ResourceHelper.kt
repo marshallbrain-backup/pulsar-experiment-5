@@ -11,11 +11,9 @@ internal class ResourceHelper {
         get() = amounts
 
     fun add(resourceDelta: Map<ResourcePath, Int>) {
-
         resourceDelta.forEach {
             amounts[it.key] = amounts.getOrElse(it.key) {0} + it.value
         }
-
     }
 
 }
