@@ -3,11 +3,16 @@ package com.marshalldbrain.pulsar.core.empires.colonies
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.*
 import com.marshalldbrain.pulsar.core.empires.colonies.districts.DistrictOverseer
 import com.marshalldbrain.pulsar.core.empires.colonies.districts.DistrictType
+import com.marshalldbrain.pulsar.core.resources.ResourceHelper
+import com.marshalldbrain.pulsar.core.resources.ResourcePath
 
+//TODO add resource collection and possessing
+//TODO add removal of tasks from construction with refund of non built units
 class Colony(districts: Set<DistrictType>) {
 
     private val constructionManager = ConstructionManager()
     private val districtOverseer = DistrictOverseer(districts)
+    private val resourceHelper = ResourceHelper()
 
     val districts: Map<DistrictType, Int>
         get() = districtOverseer.districts
@@ -15,6 +20,10 @@ class Colony(districts: Set<DistrictType>) {
         get() = constructionManager.currentTasks
     val buildQueue: List<BuildTask>
         get() = constructionManager.buildQueue
+    val resourceModifiers: Map<ResourcePath, List<Float>>
+        get() = resourceHelper.resourceModifiers
+    val resourceAmounts: Map<ResourcePath, Int>
+        get() = resourceHelper.resourceAmounts
 
     fun checkOrderPossible(target: Buildable, type: BuildType, amount: Int): Boolean {
 
@@ -39,14 +48,19 @@ class Colony(districts: Set<DistrictType>) {
                         "This should also never be seen and is a bug if it is")
             }
 
-            constructionManager.add(task)
+            constructionManager.add(task, resourceHelper)
 
         }
 
     }
 
-    fun tick(timePassed: Int) {
+    fun tickDay(timePassed: Int) {
         constructionManager.processTime(timePassed)
+    }
+
+    fun tickMonth() {
+        val resourceDelta = districtOverseer.delta
+        resourceHelper.add(resourceDelta)
     }
 
 }
