@@ -47,7 +47,10 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                 BuildType.BUILD -> {
                     target in allocation && allocated + amount <= max
                 }
-                BuildType.DESTROY, BuildType.RETOOL, BuildType.UPGRADE -> {
+                BuildType.DESTROY -> {
+                    target in allocation && allocated - amount >= 0
+                }
+                BuildType.RETOOL, BuildType.UPGRADE -> {
                     throw NotImplementedError("$type $notImplementedMessage")
                 }
                 else -> false
@@ -68,7 +71,14 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                     updateResources(target.id, target.upkeep, true)
                 }
             }
-            BuildType.DESTROY, BuildType.RETOOL, BuildType.UPGRADE -> {
+            BuildType.DESTROY -> {
+                BuildTaskImpl(target, type, 0, emptyMap(), amount) {
+                    allocation[target] = allocation.getValue(target) - 1
+                    updateResources(target.id, target.production, true)
+                    updateResources(target.id, target.upkeep)
+                }
+            }
+            BuildType.RETOOL, BuildType.UPGRADE -> {
                 throw NotImplementedError("$type $notImplementedMessage")
             }
             else -> throw UnsupportedOperationException("$type is not a supported build type for districts. " +
