@@ -26,24 +26,24 @@ class Colony(districts: Set<DistrictType>) {
     val resourceAmounts: Map<ResourcePath, Int>
         get() = resourceHelper.resourceAmounts
 
-    fun checkOrderPossible(target: Buildable, type: BuildType, amount: Int): Boolean {
+    fun checkOrderPossible(target: Buildable, type: BuildType, amount: Int, replace: Buildable? = null): Boolean {
 
         return when(target) {
             is DistrictType -> {
-                districtOverseer.check(target, type, amount)
+                districtOverseer.check(target, type, amount, replace as DistrictType?)
             }
             else -> false
         }
 
     }
 
-    fun createTask(target: Buildable, type: BuildType, amount: Int) {
+    fun createTask(target: Buildable, type: BuildType, amount: Int, replace: Buildable? = null) {
 
-        if (checkOrderPossible(target, type, amount)) {
+        if (checkOrderPossible(target, type, amount, replace)) {
 
             val task = when(target) {
                 is DistrictType -> {
-                    districtOverseer.createOrder(target, type, amount)
+                    districtOverseer.createOrder(target, type, amount, replace as DistrictType?)
                 }
                 else -> throw UnsupportedOperationException("$target is not supported. " +
                         "This should also never be seen and is a bug if it is")

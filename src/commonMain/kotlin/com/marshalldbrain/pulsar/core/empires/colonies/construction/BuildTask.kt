@@ -3,8 +3,6 @@ package com.marshalldbrain.pulsar.core.empires.colonies.construction
 import com.marshalldbrain.pulsar.core.resources.ResourceType
 
 interface BuildTask {
-
-    val target: Buildable
     val type: BuildType
     val timeUnit: Int
     val costUnit: Map<ResourceType, Int>
@@ -13,11 +11,9 @@ interface BuildTask {
     val timeUnitLeft: Int
     val timeLeft: Int
     val isDone: Boolean
-
 }
 
 internal class BuildTaskImpl(
-    override val target: Buildable,
     override val type: BuildType,
     override val timeUnit: Int,
     override val costUnit: Map<ResourceType, Int>,

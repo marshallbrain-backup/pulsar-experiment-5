@@ -40,9 +40,9 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
 
     private fun getPossibleDistricts(): List<DistrictType> = DistrictTypes.filter { it.possible() }
 
-    internal fun check(target: DistrictType, type: BuildType, amount: Int): Boolean {
+    internal fun check(target: DistrictType, type: BuildType, amount: Int, replace: DistrictType?): Boolean {
 
-        if (target in getPossibleDistricts()) {
+        if (target.possible()) {
             return when(type) {
                 BuildType.BUILD -> {
                     target in allocation && allocated + amount <= max
@@ -50,7 +50,10 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                 BuildType.DESTROY -> {
                     target in allocation && allocated - amount >= 0
                 }
-                BuildType.RETOOL, BuildType.UPGRADE -> {
+                BuildType.TOOL -> {
+                    target !in allocation && (replace == null || replace in allocation)
+                }
+                BuildType.UPGRADE -> {
                     throw NotImplementedError("$type $notImplementedMessage")
                 }
                 else -> false
@@ -61,24 +64,37 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
 
     }
 
-    internal fun createOrder(target: DistrictType, type: BuildType, amount: Int): BuildTaskImpl {
+    internal fun createOrder(target: DistrictType, type: BuildType, amount: Int, replace: DistrictType? = null): BuildTaskImpl {
 
         return when(type) {
             BuildType.BUILD -> {
-                BuildTaskImpl(target, type, target.buildTime, target.cost, amount) {
+                BuildTaskImpl(type, target.buildTime, target.cost, amount) {
                     allocation[target] = allocation.getValue(target) + 1
                     updateResources(target.id, target.production)
                     updateResources(target.id, target.upkeep, true)
                 }
             }
             BuildType.DESTROY -> {
-                BuildTaskImpl(target, type, 0, emptyMap(), amount) {
+                BuildTaskImpl(type, target.buildTime, target.cost, amount) {
                     allocation[target] = allocation.getValue(target) - 1
                     updateResources(target.id, target.production, true)
                     updateResources(target.id, target.upkeep)
                 }
             }
-            BuildType.RETOOL, BuildType.UPGRADE -> {
+            BuildType.TOOL -> {
+                if (replace == null) {
+                    BuildTaskImpl(type, 0, emptyMap(),1) {
+                        allocation[target] = 0
+                    }
+                } else {
+                    BuildTaskImpl(type, target.toolTime, target.toolCost,1) {
+                        println(allocation.remove(replace))
+                        println(replace in allocation)
+                        allocation[target] = 0
+                    }
+                }
+            }
+            BuildType.UPGRADE -> {
                 throw NotImplementedError("$type $notImplementedMessage")
             }
             else -> throw UnsupportedOperationException("$type is not a supported build type for districts. " +

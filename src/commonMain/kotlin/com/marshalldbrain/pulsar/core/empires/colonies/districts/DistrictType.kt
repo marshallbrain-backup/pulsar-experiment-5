@@ -9,6 +9,8 @@ class DistrictType (
     val cost: Map<ResourceType, Int>,
     val production: Map<ResourceType, Int>,
     val upkeep: Map<ResourceType, Int>,
+    val toolTime: Int,
+    val toolCost: Map<ResourceType, Int>,
     private val possible: () -> Boolean,
     private val starting: () -> Boolean
 ) : Buildable {
