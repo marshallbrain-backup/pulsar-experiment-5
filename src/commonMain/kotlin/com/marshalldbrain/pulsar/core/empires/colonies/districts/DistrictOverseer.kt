@@ -45,16 +45,17 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
         if (target.possible()) {
             return when(type) {
                 BuildType.BUILD -> {
-                    target in allocation && allocated + amount <= max
+                    target in allocation
                 }
                 BuildType.DESTROY -> {
-                    target in allocation && allocated - amount >= 0
+                    target in allocation && allocation.getValue(target) - amount >= 0
                 }
                 BuildType.TOOL -> {
                     target !in allocation && (replace == null || replace in allocation)
                 }
-                BuildType.UPGRADE -> {
-                    throw NotImplementedError("$type $notImplementedMessage")
+                BuildType.REPLACE -> {
+                    (target in allocation) &&
+                            (replace != null && replace in allocation && allocation.getValue(replace) - amount >= 0)
                 }
                 else -> false
             }
@@ -94,7 +95,21 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                     }
                 }
             }
-            BuildType.UPGRADE -> {
+            BuildType.REPLACE -> {
+                if (replace != null) {
+                    BuildTaskImpl(type, target.buildTime, target.cost, amount) {
+                        allocation[target] = allocation.getValue(target) + 1
+                        updateResources(target.id, target.production)
+                        updateResources(target.id, target.upkeep, true)
+                        allocation[replace] = allocation.getValue(replace) - 1
+                        updateResources(replace.id, replace.production, true)
+                        updateResources(replace.id, replace.upkeep)
+                    }
+                } else {
+                    throw NullPointerException("Replace is null")
+                }
+            }
+            BuildType.UPGRADE, BuildType.DOWNGRADE -> {
                 throw NotImplementedError("$type $notImplementedMessage")
             }
             else -> throw UnsupportedOperationException("$type is not a supported build type for districts. " +

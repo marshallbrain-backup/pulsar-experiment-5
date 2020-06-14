@@ -4,5 +4,7 @@ enum class BuildType {
     BUILD,
     DESTROY,
     TOOL,
-    UPGRADE
+    REPLACE,
+    UPGRADE,
+    DOWNGRADE
 }
