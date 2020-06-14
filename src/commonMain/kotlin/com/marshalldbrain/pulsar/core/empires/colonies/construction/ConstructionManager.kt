@@ -28,7 +28,7 @@ internal class ConstructionManager {
     fun processTime(timePassed: Int) {
         var buildRemaining = timePassed
 
-        while (buildRemaining > 0) {
+        while (buildRemaining > 0 && tasks.isNotEmpty()) {
             buildRemaining = tasks[0].build(buildRemaining)
             if (buildRemaining >= 0 && tasks[0].isDone) {
                 tasks.removeAt(0)
