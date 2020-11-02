@@ -5,10 +5,11 @@ import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildType
 import com.marshalldbrain.pulsar.core.resources.ResourcePath
 import com.marshalldbrain.pulsar.core.resources.ResourceType
 
-class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
+class DistrictOverseer (
+    private val DistrictTypes: Set<DistrictType>,
+    private val properties: DistrictProperties
+) {
 
-    private val max = 25
-    private val maxSlots = 4
     private val allocation = mutableMapOf<DistrictType, Int>()
     private val resourceDelta = mutableMapOf<ResourcePath, Int>()
     private val notImplementedMessage = "has not been implemented as possible construction types for " +
@@ -21,11 +22,7 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
     val districts: Map<DistrictType, Int>
         get() = allocation
     val delta: Map<ResourcePath, Int>
-        get() {
-            val delta = resourceDelta.toMap()
-            resourceDelta.clear()
-            return delta
-        }
+        get() = resourceDelta.toMap()
 
     init {
 
@@ -46,16 +43,20 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
             return when(type) {
                 BuildType.BUILD -> {
                     target in allocation
+                            && allocated + amount <= properties.districtCount
                 }
                 BuildType.DESTROY -> {
-                    target in allocation && allocation.getValue(target) - amount >= 0
+                    target in allocation
+                            && allocation.getValue(target) - amount >= 0
                 }
                 BuildType.TOOL -> {
-                    target !in allocation && (replace == null || replace in allocation)
+                    (target !in allocation)
+                            && ((replace == null && allocatedSlots + 1 < properties.districtSlots)
+                                    || replace in allocation)
                 }
                 BuildType.REPLACE -> {
-                    (target in allocation) &&
-                            (replace != null && replace in allocation && allocation.getValue(replace) - amount >= 0)
+                    (target in allocation)
+                            && (replace != null && replace in allocation && allocation.getValue(replace) - amount >= 0)
                 }
                 else -> false
             }
@@ -72,13 +73,13 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                 BuildTaskImpl(type, target.buildTime, target.cost, amount) {
                     allocation[target] = allocation.getValue(target) + 1
                     updateResources(target.id, target.production)
-                    updateResources(target.id, target.upkeep, true)
+                    updateResources(target.id, target.upkeep, -1)
                 }
             }
             BuildType.DESTROY -> {
                 BuildTaskImpl(type, target.buildTime, target.cost, amount) {
                     allocation[target] = allocation.getValue(target) - 1
-                    updateResources(target.id, target.production, true)
+                    updateResources(target.id, target.production, -1)
                     updateResources(target.id, target.upkeep)
                 }
             }
@@ -89,8 +90,7 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                     }
                 } else {
                     BuildTaskImpl(type, target.toolTime, target.toolCost,1) {
-                        println(allocation.remove(replace))
-                        println(replace in allocation)
+                        allocation.remove(replace)
                         allocation[target] = 0
                     }
                 }
@@ -100,9 +100,9 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
                     BuildTaskImpl(type, target.buildTime, target.cost, amount) {
                         allocation[target] = allocation.getValue(target) + 1
                         updateResources(target.id, target.production)
-                        updateResources(target.id, target.upkeep, true)
+                        updateResources(target.id, target.upkeep, -1)
                         allocation[replace] = allocation.getValue(replace) - 1
-                        updateResources(replace.id, replace.production, true)
+                        updateResources(replace.id, replace.production, -1)
                         updateResources(replace.id, replace.upkeep)
                     }
                 } else {
@@ -112,8 +112,7 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
             BuildType.UPGRADE, BuildType.DOWNGRADE -> {
                 throw NotImplementedError("$type $notImplementedMessage")
             }
-            else -> throw UnsupportedOperationException("$type is not a supported build type for districts. " +
-                    "This should also never be seen and is a bug if it is")
+            else -> throw UnsupportedOperationException("$type is not a supported build type for districts.")
         }
 
     }
@@ -121,11 +120,11 @@ class DistrictOverseer (private val DistrictTypes: Set<DistrictType>) {
     private fun updateResources(
         id: String,
         resources: Map<ResourceType, Int>,
-        remove: Boolean = false
+        multiplier: Int = 1
     ) {
         resources.forEach {
             val path = ResourcePath(it.key, id)
-            resourceDelta[path] = resourceDelta.getOrPut(path) {0} + it.value * if (remove) -1 else 1
+            resourceDelta[path] = resourceDelta.getOrPut(path) {0} + it.value * multiplier
         }
     }
 
