@@ -1,5 +1,7 @@
 package com.marshalldbrain.pulsar.core.empires.colonies.districts
 
+import com.marshalldbrain.ion.collections.Queue
+import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildTask
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildTaskImpl
 import com.marshalldbrain.pulsar.core.empires.colonies.construction.BuildType
 import com.marshalldbrain.pulsar.core.resources.ResourcePath
@@ -10,13 +12,15 @@ class DistrictOverseer (
     private val properties: DistrictProperties
 ) {
 
+    private var allocationPlanned = 0
+
     private val allocation = mutableMapOf<DistrictType, Int>()
     private val resourceDelta = mutableMapOf<ResourcePath, Int>()
     private val notImplementedMessage = "has not been implemented as possible construction types for " +
             "districts but plans to be implemented in the future."
 
     val allocated: Int
-        get() = allocation.values.sum()
+        get() = allocation.values.sum() + allocationPlanned
     val allocatedSlots: Int
         get() = allocation.size
     val districts: Map<DistrictType, Int>
@@ -68,13 +72,22 @@ class DistrictOverseer (
 
     internal fun createOrder(target: DistrictType, type: BuildType, amount: Int, replace: DistrictType? = null): BuildTaskImpl {
 
+        //TODO update other types with same logic used in build type
         return when(type) {
             BuildType.BUILD -> {
-                BuildTaskImpl(type, target.buildTime, target.cost, amount) {
+
+                allocationPlanned += amount
+
+                val onComplete = {
                     allocation[target] = allocation.getValue(target) + 1
+                    allocationPlanned--
+
                     updateResources(target.id, target.production)
                     updateResources(target.id, target.upkeep, -1)
                 }
+
+                BuildTaskImpl(type, target.buildTime, target.cost, amount, onComplete)
+
             }
             BuildType.DESTROY -> {
                 BuildTaskImpl(type, target.buildTime, target.cost, amount) {
