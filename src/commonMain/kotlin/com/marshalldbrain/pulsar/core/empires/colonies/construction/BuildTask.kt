@@ -18,7 +18,7 @@ internal class BuildTaskImpl(
     override val timeUnit: Int,
     override val costUnit: Map<ResourceType, Int>,
     override val amount: Int,
-    private val onComplete: () -> Unit
+    private val onComplete: () -> Unit = {}
 ) : BuildTask {
 
     override var timeUnitLeft: Int = timeUnit
