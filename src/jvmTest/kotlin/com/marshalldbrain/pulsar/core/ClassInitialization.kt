@@ -38,6 +38,17 @@ fun initDistrictTypes(): Map<String, DistrictType> {
             mapOf(Pair(minerals, 10)),
             returnTrue,
             returnFalse
+        ),
+        DistrictType(
+            "blocking",
+            10,
+            emptyMap(),
+            emptyMap(),
+            emptyMap(),
+            10,
+            mapOf(Pair(minerals, 10)),
+            returnTrue,
+            returnTrue
         )
     ).associateBy { it.id }
 

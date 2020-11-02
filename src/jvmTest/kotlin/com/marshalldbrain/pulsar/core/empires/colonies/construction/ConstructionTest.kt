@@ -2,6 +2,7 @@ package com.marshalldbrain.pulsar.core.empires.colonies.construction
 
 import com.marshalldbrain.pulsar.core.empires.colonies.Colony
 import com.marshalldbrain.pulsar.core.initConstructionTest
+import com.marshalldbrain.pulsar.core.universe.Body
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -9,10 +10,12 @@ import io.kotest.matchers.shouldBe
 
 class ConstructionTest : FunSpec({
 
+    val body = Body("testBody1", 10, 0, true)
+
     context("Create task") {
 
         val build = initConstructionTest().getValue("free")
-        val colony = Colony(setOf(build))
+        val colony = Colony(setOf(build), body)
 
         test("Add to current build tasks") {
 
@@ -40,7 +43,7 @@ class ConstructionTest : FunSpec({
     context("Construction possessed") {
 
         val build = initConstructionTest().getValue("free")
-        val colony = Colony(setOf(build))
+        val colony = Colony(setOf(build), body)
 
         test("Build task") {
 
@@ -157,7 +160,7 @@ class ConstructionTest : FunSpec({
     context("0 time auto completes") {
 
         val build = initConstructionTest().getValue("0time")
-        val colony = Colony(setOf(build))
+        val colony = Colony(setOf(build), body)
 
         test("build") {
 

@@ -11,7 +11,9 @@ import io.kotest.matchers.maps.shouldContainAll
 
 class ResourceTest : FunSpec({
 
-    test("Costs")
+    test("Costs") {
+
+    }
 
 }) {
     override fun isolationMode(): IsolationMode = IsolationMode.InstancePerTest

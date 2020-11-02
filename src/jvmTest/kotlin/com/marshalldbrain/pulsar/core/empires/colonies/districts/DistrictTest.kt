@@ -7,15 +7,15 @@ import com.marshalldbrain.pulsar.core.food
 import com.marshalldbrain.pulsar.core.initDistrictTypes
 import com.marshalldbrain.pulsar.core.initResourceTest
 import com.marshalldbrain.pulsar.core.resources.ResourcePath
-import io.kotest.assertions.throwables.shouldThrow
+import com.marshalldbrain.pulsar.core.universe.Body
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.data.forAll
-import io.kotest.data.row
 import io.kotest.matchers.maps.*
 import io.kotest.matchers.shouldBe
 
 class DistrictTest : FunSpec({
+
+    val body = Body("testBody1", 10, 0, true)
 
     context("Check task") {
 
@@ -23,7 +23,9 @@ class DistrictTest : FunSpec({
         val possible = districts.getValue("possibleTrue")
         val notPossible = districts.getValue("possibleFalse")
         val tool = districts.getValue("tool")
-        val colony = Colony(districts.values.toSet())
+        val blocking = districts.getValue("blocking")
+
+        val colony = Colony(districts.values.toSet(), body)
 
         test("District is possible") {
             colony.checkOrderPossible(possible, BuildType.BUILD, 1) shouldBe true
@@ -41,8 +43,14 @@ class DistrictTest : FunSpec({
                     colony.checkOrderPossible(possible, BuildType.BUILD, 1) shouldBe true
                 }
 
-                test("!To many districts") {
-                    TODO("Not Implemented")
+                test("To many districts") {
+                    colony.checkOrderPossible(possible, BuildType.BUILD, 11) shouldBe false
+                }
+
+                test("To many districts while constructing") {
+                    colony.createTask(blocking, BuildType.BUILD, 6)
+                    colony.checkOrderPossible(blocking, BuildType.BUILD, 6) shouldBe false
+
                 }
 
                 test("Completed") {
@@ -65,6 +73,13 @@ class DistrictTest : FunSpec({
                     colony.checkOrderPossible(possible, BuildType.DESTROY, 1) shouldBe false
                 }
 
+                test("To few districts while constructing") {
+                    colony.createTask(possible, BuildType.BUILD, 1)
+                    colony.createTask(blocking, BuildType.DESTROY, 1)
+                    colony.checkOrderPossible(blocking, BuildType.DESTROY, 1) shouldBe false
+
+                }
+
                 test("Completed") {
                     colony.createTask(possible, BuildType.BUILD, 1)
                     colony.createTask(possible, BuildType.DESTROY, 1)
@@ -78,34 +93,37 @@ class DistrictTest : FunSpec({
             context("Tool") {
 
                 test("Possible empty slot") {
-                    colony.checkOrderPossible(tool, BuildType.TOOL, 1) shouldBe true
+                    colony.checkOrderPossible(tool, BuildType.TOOL) shouldBe true
                 }
 
                 test("Possible existing slot") {
-                    colony.checkOrderPossible(tool, BuildType.TOOL, 1, possible) shouldBe true
+                    colony.checkOrderPossible(tool, BuildType.TOOL, replace = possible) shouldBe true
                 }
 
                 test("Target is not possible") {
-                    colony.checkOrderPossible(notPossible, BuildType.TOOL, 1, possible) shouldBe false
+                    colony.checkOrderPossible(notPossible, BuildType.TOOL, replace = possible) shouldBe false
                 }
 
                 test("Replace is not tooled") {
-                    colony.checkOrderPossible(tool, BuildType.TOOL, 1, notPossible) shouldBe false
+                    colony.checkOrderPossible(tool, BuildType.TOOL, replace = notPossible) shouldBe false
                 }
 
-                test("!To many tooled districts") {
-                    TODO("Not Implemented")
+                test("To many tooled districts") {
+                    colony.createTask(initResourceTest().getValue("production"), BuildType.TOOL)
+                    colony.createTask(initResourceTest().getValue("upkeep"), BuildType.TOOL)
+
+                    colony.checkOrderPossible(tool, BuildType.TOOL) shouldBe false
                 }
 
                 test("Completed empty slot") {
-                    colony.createTask(tool, BuildType.TOOL, 1)
+                    colony.createTask(tool, BuildType.TOOL)
 
                     colony.districts shouldContainKey tool
                     colony.districts[tool] shouldBe 0
                 }
 
                 test("Completed existing slot") {
-                    colony.createTask(tool, BuildType.TOOL, 1, possible)
+                    colony.createTask(tool, BuildType.TOOL, replace = possible)
                     colony.tickDay(10)
 
                     colony.districts shouldNotContainKey possible
@@ -153,17 +171,9 @@ class DistrictTest : FunSpec({
 
         }
 
-        test("Not implemented types") {
-//            forAll(
-//                row()
-//            ) { type ->
-//                shouldThrow<NotImplementedError> {
-//                    colony.checkOrderPossible(possible, type, 1)
-//                }
-//            }
-        }
+        test("Unsupported build types") {
 
-        test("Unsupported build types")
+        }
 
     }
 
@@ -172,7 +182,7 @@ class DistrictTest : FunSpec({
         context("Production") {
 
             val build = initResourceTest().getValue("production")
-            val colony = Colony(setOf(build))
+            val colony = Colony(setOf(build), body)
 
             test("One built") {
 
@@ -233,7 +243,7 @@ class DistrictTest : FunSpec({
         context("Upkeep") {
 
             val build = initResourceTest().getValue("upkeep")
-            val colony = Colony(setOf(build))
+            val colony = Colony(setOf(build), body)
 
             test("One built") {
 
@@ -294,7 +304,7 @@ class DistrictTest : FunSpec({
         context("Production and upkeep") {
 
             val build = initResourceTest().getValue("operation")
-            val colony = Colony(setOf(build))
+            val colony = Colony(setOf(build), body)
 
             test("One built") {
 
