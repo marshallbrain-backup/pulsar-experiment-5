@@ -2,13 +2,10 @@ package com.marshalldbrain.pulsar.core.empires.colonies.construction
 
 import com.marshalldbrain.ion.ImpossibleStateException
 import com.marshalldbrain.ion.collections.queueOf
-import com.marshalldbrain.pulsar.core.resources.ResourceHelper
-import com.marshalldbrain.pulsar.core.resources.ResourceType
-import kotlin.reflect.KFunction3
 
 internal class ConstructionManager {
 
-    private val tasks = mutableListOf<BuildTaskImpl>()
+    private val tasks = mutableSetOf<BuildTaskImpl>()
     val currentTasks: List<BuildTask>
         get() = tasks.toList()
     private val queue = queueOf<BuildTaskImpl>()
@@ -26,20 +23,27 @@ internal class ConstructionManager {
     }
 
     fun processTime(timePassed: Int) {
-        var buildRemaining = timePassed
+        //TODO possible bug with task building twice.
+        //Fix will be to simply clone tasks before the loop but will not do unless necessary
+        for (task in tasks) {
+            var currentTask = task
+            var buildRemaining = timePassed
 
-        while (buildRemaining > 0 && tasks.isNotEmpty()) {
-            buildRemaining = tasks[0].build(buildRemaining)
-            if (buildRemaining >= 0 && tasks[0].isDone) {
-                tasks.removeAt(0)
-                if (tasks.isNotEmpty()) {
+            while (buildRemaining > 0 && tasks.isNotEmpty()) {
+                buildRemaining = currentTask.build(buildRemaining)
+                if (buildRemaining >= 0 && currentTask.isDone) {
+                    tasks.remove(currentTask)
+                    if (tasks.isNotEmpty()) {
+                        throw ImpossibleStateException()
+                    }
+                    if (queue.isNotEmpty()) {
+                        currentTask = queue.pop()
+                        tasks.add(currentTask)
+                    }
+                } else if ((buildRemaining < 0 && currentTask.isDone) || (buildRemaining >= 0 && !currentTask.isDone)) {
                     throw ImpossibleStateException()
                 }
-                if (queue.isNotEmpty()) {
-                    tasks.add(queue.pop())
-                }
-            } else if ((buildRemaining < 0 && tasks[0].isDone) || (buildRemaining >= 0 && !tasks[0].isDone)) {
-                throw ImpossibleStateException()
+
             }
 
         }
